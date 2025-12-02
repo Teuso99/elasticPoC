@@ -1,0 +1,28 @@
+﻿services:
+  elasticsearch:
+    image: elasticsearch:9.2.1
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - network.host=0.0.0.0
+    ports:
+      - 9200:9200
+  
+  kibana:
+    image: kibana:9.2.1
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    ports:
+      - 5601:5601
+
+  api:
+    image: elasticpoc
+    build:
+      context: .
+      dockerfile: ElasticPoC/Dockerfile
+    depends_on:
+      - elasticsearch
+    ports:
+      - 8080:8080
