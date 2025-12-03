@@ -22,6 +22,8 @@
     build:
       context: .
       dockerfile: ElasticPoC/Dockerfile
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     depends_on:
       - elasticsearch
     ports:
