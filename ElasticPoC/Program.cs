@@ -49,12 +49,19 @@ app.MapPost("/person", async () =>
 
 app.MapGet("/person", async () =>
 {
-    var result = await SearchPersons();
+    var result = await GetAllPersons();
     
     return result.Count > 0 ? Results.Ok(result) : Results.NotFound();
 });
 
 app.MapDelete("/person/purge", async () => await Purge() ? Results.Ok() : Results.BadRequest());
+
+app.MapGet("/person/search", async (string name) =>
+{
+    var result = await GetAllPersons(name);
+    
+    return result.Count > 0 ? Results.Ok(result) : Results.NotFound();
+});
 
 app.Run();
 return;
@@ -111,12 +118,17 @@ async Task<bool> Purge()
     }
 }
 
-async Task<List<Person>> SearchPersons()
+async Task<List<Person>> GetAllPersons(string? name = null)
 {
     Log.Information("[*] Searching for persons...");
     
-    var response = await elasticClient.SearchAsync<Person>("persons");
-
+    var response = await elasticClient.SearchAsync<Person>("persons", s => s.Query(q =>
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            q.MatchAll();
+        else
+            q.Match(m => m.Field(f => f.FirstName).Fuzziness(new Fuzziness("Auto")).Query(name));
+    })); 
     return response.IsValidResponse ? response.Documents.ToList() : [];
 }
 
